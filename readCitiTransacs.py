@@ -2,6 +2,7 @@ import pandas as pd
 import authorize as au
 import re
 from datetime import datetime
+from multiprocessing import Process
 
 def get_messages(service):
     citiTransacsLabelID = 'Label_3370579833892165018'
@@ -14,10 +15,15 @@ def get_messages(service):
 
     return messages
 
+def write_to_csv(df, filename):
+    df.to_csv(filename + '.csv')
+
+def write_to_excel(df, filename):
+    df.to_excel(filename + '.xlsx')
+
 def main():
 
     service = au.Authorization().authorize()
-
     messages = get_messages(service)
 
     data = []
@@ -40,7 +46,6 @@ def main():
             place_match = re.search(r'at\s[\w\s\/\,\*.]+\sLimit', snippet)
             if place_match:
                 place = place_match.group()[3:-7]
-                # place = place[3:-7]
             else:
                 place = 'could not find'
 
@@ -51,9 +56,18 @@ def main():
 
     mails_df = pd.DataFrame(data, columns = ['Date', 'Amount', 'Place', 'Snippet'])
 
-    fileName = 'Citi_Gmail.csv'
+    fileName = 'Citi_Gmail'
     # mails_df.to_excel(fileName)
-    mails_df.to_csv(fileName)
+    # mails_df.to_csv(fileName)
+
+    p1 = Process(target = write_to_csv, args=(mails_df, fileName))
+    p2 = Process(target = write_to_excel, args=(mails_df, fileName))
+
+    p1.start()
+    p2.start()
+
+    p1.join()
+    p2.join()
 
     print('File Ready')
 
