@@ -4,28 +4,25 @@ import re
 from datetime import datetime
 from multiprocessing import Process
 
-
 def get_messages(service):
     citiTransacsLabelID = 'Label_3370579833892165018'
     citiTransacsSearchQuery = 'from:CitiAlert.India@citicorp.com'
     user = 'me'
 
-    results = service.users().messages().list(userId=user, labelIds=citiTransacsLabelID, maxResults=5).execute()
+    results = service.users().messages().list(userId = user, labelIds = citiTransacsLabelID, maxResults = 5).execute()
     # results = service.users().messages().list(userId = 'me', q = citiTransacsSearchQuery).execute()
     messages = results.get('messages', [])
 
     return messages
 
-
 def write_to_csv(df, filename):
     df.to_csv(filename + '.csv')
-
 
 def write_to_excel(df, filename):
     df.to_excel(filename + '.xlsx')
 
-
 def main():
+
     service = au.Authorization().authorize()
     messages = get_messages(service)
 
@@ -35,7 +32,7 @@ def main():
         print('No messages found')
     else:
         for message in messages:
-            message_content = service.users().messages().get(userId='me', id=message['id']).execute()
+            message_content = service.users().messages().get(userId = 'me', id = message['id']).execute()
 
             snippet = message_content['snippet']
 
@@ -57,12 +54,14 @@ def main():
 
             data.append([dateTime, cost, place, snippet])
 
-    mails_df = pd.DataFrame(data, columns=['Date', 'Amount', 'Place', 'Snippet'])
+    mails_df = pd.DataFrame(data, columns = ['Date', 'Amount', 'Place', 'Snippet'])
 
     fileName = 'Citi_Gmail'
+    # mails_df.to_excel(fileName)
+    # mails_df.to_csv(fileName)
 
-    p1 = Process(target=write_to_csv, args=(mails_df, fileName))
-    p2 = Process(target=write_to_excel, args=(mails_df, fileName))
+    p1 = Process(target = write_to_csv, args=(mails_df, fileName))
+    p2 = Process(target = write_to_excel, args=(mails_df, fileName))
 
     p1.start()
     p2.start()
@@ -71,7 +70,6 @@ def main():
     p2.join()
 
     print('File Ready')
-
 
 if __name__ == '__main__':
     main()
